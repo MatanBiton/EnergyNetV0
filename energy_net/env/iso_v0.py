@@ -35,6 +35,7 @@ from stable_baselines3 import PPO
 from energy_net.iso_controller import ISOController
 from energy_net.market.pricing_policy import PricingPolicy 
 from energy_net.market.iso.demand_patterns import DemandPattern
+from energy_net.market.iso.cost_types import CostType
 
 class ISOEnv(gym.Env):
     """
@@ -58,7 +59,7 @@ class ISOEnv(gym.Env):
     
     def __init__(
         self,
-        cost_type=None,
+        cost_type=CostType.CONSTANT,
         pricing_policy=None,
         num_pcs_agents=None,
         render_mode: Optional[str] = None,
