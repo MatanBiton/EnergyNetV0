@@ -108,13 +108,16 @@ class ISOController:
         """
         # Set up logger
         self.logger = setup_logger('ISOController', log_file)
-        self.logger.info(f"Initializing ISO Controller with {pricing_policy.value} policy")
+        if pricing_policy:
+            self.logger.info(f"Initializing ISO Controller with {pricing_policy.value} policy")
         
         self.pricing_policy = pricing_policy
         self.demand_pattern = demand_pattern  # Store it as instance variable
-        self.logger.info(f"Using demand pattern: {demand_pattern.value}")
+        if demand_pattern:
+            self.logger.info(f"Using demand pattern: {demand_pattern.value}")
         self.cost_type = cost_type
-        self.logger.info(f"Using cost type: {cost_type.value}")
+        if cost_type:
+            self.logger.info(f"Using cost type: {cost_type.value}")
 
         # Load configurations
         self.env_config = self.load_config(env_config_path)
