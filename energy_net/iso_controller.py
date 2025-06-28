@@ -26,6 +26,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import logging
 import yaml
+import pkg_resources
 import os
 from typing import Dict, Any, Tuple, Union, List, Optional
 from stable_baselines3 import PPO
@@ -85,9 +86,9 @@ class ISOController:
         demand_pattern=None,
         cost_type=None, 
         render_mode: Optional[str] = None,
-        env_config_path: Optional[str] = default_env_config_path,
-        iso_config_path: Optional[str] = default_iso_config_path,
-        pcs_unit_config_path: Optional[str] = default_pcs_unit_config_path,
+        env_config_path: Optional[str] = "environment_config.yaml",
+        iso_config_path: Optional[str] = "iso_config.yaml",
+        pcs_unit_config_path: Optional[str] = "pcs_unit_config.yaml",
         log_file: Optional[str] = 'logs/environments.log',
         reward_type: str = 'iso',
         model_path: Optional[str] = None,
@@ -283,13 +284,20 @@ class ISOController:
         Raises:
             FileNotFoundError: If the configuration file is not found
         """
-        if not os.path.exists(config_file):
-            self.logger.error(f"Configuration file not found: {config_file}")
-            raise FileNotFoundError(f"Configuration file not found: {config_file}")
-        with open(config_file, "r") as f:
-            cfg = yaml.safe_load(f)
-            self.logger.debug(f"Loaded configuration from {config_file}")
-        return cfg
+        if config_file and os.path.exists(config_file):
+            self.logger.debug(f"Loading config from filesystem: {config_file}")
+            with open(config_file, 'r') as f:
+                return yaml.safe_load(f)
+        resource_name = f"configs/{config_file}"
+        try:
+            raw = pkg_resources.resource_string("energy_net", resource_name)
+            cfg = yaml.safe_load(raw)
+            self.logger.debug(f"Loaded config from package resource: {resource_name}")
+            return cfg
+        except Exception as e:
+            msg = f"Configuration file not found (neither FS nor pkg resource): {config_file}"
+            self.logger.error(f"{msg} — {e}")
+            raise FileNotFoundError(msg)
 
     def build_observation(self) -> np.ndarray:
         """
