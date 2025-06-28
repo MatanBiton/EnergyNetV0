@@ -71,7 +71,7 @@ class ISOController:
     def __init__(
         self,
         num_pcs_agents: int = 1, 
-        pricing_policy: PricingPolicy = None,  
+        pricing_policy: PricingPolicy = PricingPolicy.ONLINE,  
         demand_pattern=None,
         cost_type=None, 
         render_mode: Optional[str] = None,
