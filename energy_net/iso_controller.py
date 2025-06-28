@@ -286,9 +286,18 @@ class ISOController:
         """
         if config_file and os.path.exists(config_file):
             self.logger.debug(f"Loading config from filesystem: {config_file}")
-            with open(config_file, 'r') as f:
+            with open(config_file, "r") as f:
                 return yaml.safe_load(f)
-        resource_name = f"configs/{config_file}"
+
+        # 2) Fall back to package data in energy_net/configs/
+        #    Normalize resource name:
+        #    - If user already passed "configs/…", keep it
+        #    - Else, prepend "configs/"
+        if config_file.startswith("configs/"):
+            resource_name = config_file
+        else:
+            resource_name = f"configs/{config_file}"
+
         try:
             raw = pkg_resources.resource_string("energy_net", resource_name)
             cfg = yaml.safe_load(raw)
