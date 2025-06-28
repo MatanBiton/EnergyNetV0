@@ -84,7 +84,7 @@ class ISOController:
         num_pcs_agents: int = 1, 
         pricing_policy: PricingPolicy = None,  
         demand_pattern=None,
-        cost_type=None, 
+        cost_type=CostType.CONSTANT, 
         render_mode: Optional[str] = None,
         env_config_path: Optional[str] = "environment_config.yaml",
         iso_config_path: Optional[str] = "iso_config.yaml",
