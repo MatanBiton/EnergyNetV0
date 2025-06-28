@@ -1,1 +1,1 @@
-include configs/*.yaml
+recursive-include energy_net/configs *.yaml

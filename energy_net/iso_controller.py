@@ -42,6 +42,11 @@ from energy_net.rewards.base_reward import BaseReward
 from energy_net.controllers.iso.metrics_handler import ISOMetricsHandler
 from energy_net.controllers.iso.pcs_simulator import PCSSimulator
 from energy_net.controllers.iso.pricing_strategy import PricingStrategyFactory, PricingStrategy
+from importlib.resources import files
+
+default_env_config_path = files("energy_net.configs").joinpath("environment_config.yaml")
+default_iso_config_path = files("energy_net.configs").joinpath("iso_config.yaml")
+default_pcs_unit_config_path = files("energy_net.configs").joinpath("pcs_unit_config.yaml")
 
 
 class ISOController:
@@ -75,9 +80,9 @@ class ISOController:
         demand_pattern=None,
         cost_type=None, 
         render_mode: Optional[str] = None,
-        env_config_path: Optional[str] = 'configs/environment_config.yaml',
-        iso_config_path: Optional[str] = 'configs/iso_config.yaml',
-        pcs_unit_config_path: Optional[str] = 'configs/pcs_unit_config.yaml',
+        env_config_path: Optional[str] = default_env_config_path,
+        iso_config_path: Optional[str] = default_iso_config_path,
+        pcs_unit_config_path: Optional[str] = default_pcs_unit_config_path,
         log_file: Optional[str] = 'logs/environments.log',
         reward_type: str = 'iso',
         model_path: Optional[str] = None,
