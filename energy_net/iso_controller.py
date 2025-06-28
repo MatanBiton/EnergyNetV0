@@ -42,11 +42,16 @@ from energy_net.rewards.base_reward import BaseReward
 from energy_net.controllers.iso.metrics_handler import ISOMetricsHandler
 from energy_net.controllers.iso.pcs_simulator import PCSSimulator
 from energy_net.controllers.iso.pricing_strategy import PricingStrategyFactory, PricingStrategy
-from importlib.resources import files
+import os
+from typing import Optional
 
-default_env_config_path = files("energy_net.configs").joinpath("environment_config.yaml")
-default_iso_config_path = files("energy_net.configs").joinpath("iso_config.yaml")
-default_pcs_unit_config_path = files("energy_net.configs").joinpath("pcs_unit_config.yaml")
+# __file__ is energy_net/iso_controller.py, so this is site-packages/energy_net
+_BASE_DIR = os.path.dirname(__file__)
+_CONFIG_DIR = os.path.join(_BASE_DIR, "configs")
+
+default_env_config_path: Optional[str] = os.path.join(_CONFIG_DIR, "environment_config.yaml")
+default_iso_config_path: Optional[str] = os.path.join(_CONFIG_DIR, "iso_config.yaml")
+default_pcs_unit_config_path: Optional[str] = os.path.join(_CONFIG_DIR, "pcs_unit_config.yaml")
 
 
 class ISOController:
@@ -278,16 +283,13 @@ class ISOController:
         Raises:
             FileNotFoundError: If the configuration file is not found
         """
-        try:
-            if hasattr(config_file, "open"):  # importlib.resources Traversable
-                with config_file.open('r') as file:
-                    return yaml.safe_load(file)
-            else:  # assume it's a string path
-                with open(config_file, 'r') as file:
-                    return yaml.safe_load(file)
-        except Exception as e:
-            self.logger.error(f"Failed to load config {config_file}: {e}")
+        if not os.path.exists(config_file):
+            self.logger.error(f"Configuration file not found: {config_file}")
             raise FileNotFoundError(f"Configuration file not found: {config_file}")
+        with open(config_file, "r") as f:
+            cfg = yaml.safe_load(f)
+            self.logger.debug(f"Loaded configuration from {config_file}")
+        return cfg
 
     def build_observation(self) -> np.ndarray:
         """
