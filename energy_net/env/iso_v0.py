@@ -33,7 +33,7 @@ import numpy as np
 import gymnasium as gym
 from stable_baselines3 import PPO
 from energy_net.iso_controller import ISOController
-from energy_net.env import PricingPolicy 
+from energy_net.market.pricing_policy import PricingPolicy 
 from energy_net.market.iso.demand_patterns import DemandPattern
 
 class ISOEnv(gym.Env):
