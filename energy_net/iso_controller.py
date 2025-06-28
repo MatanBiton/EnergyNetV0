@@ -264,8 +264,8 @@ class ISOController:
 
         self.demand_pattern = demand_pattern
         self.logger.info(f"Using demand pattern: {demand_pattern.value}")
-
-    def load_config(self, config_path: str) -> Dict[str, Any]:
+    
+    def load_config(self, config_file) -> Dict[str, Any]:
         """
         Load configuration from YAML file.
         
@@ -278,13 +278,16 @@ class ISOController:
         Raises:
             FileNotFoundError: If the configuration file is not found
         """
-        if not os.path.exists(config_path):
-            self.logger.error(f"Configuration file not found: {config_path}")
-            raise FileNotFoundError(f"Configuration file not found: {config_path}")
-        with open(config_path, 'r') as file:
-            config = yaml.safe_load(file)
-            self.logger.debug(f"Loaded configuration from {config_path}")
-        return config
+        try:
+            if hasattr(config_file, "open"):  # importlib.resources Traversable
+                with config_file.open('r') as file:
+                    return yaml.safe_load(file)
+            else:  # assume it's a string path
+                with open(config_file, 'r') as file:
+                    return yaml.safe_load(file)
+        except Exception as e:
+            self.logger.error(f"Failed to load config {config_file}: {e}")
+            raise FileNotFoundError(f"Configuration file not found: {config_file}")
 
     def build_observation(self) -> np.ndarray:
         """
