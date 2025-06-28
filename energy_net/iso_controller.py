@@ -31,7 +31,7 @@ from typing import Dict, Any, Tuple, Union, List, Optional
 from stable_baselines3 import PPO
 
 from energy_net.utils.logger import setup_logger
-from energy_net.env import PricingPolicy
+from energy_net.market.pricing_policy import PricingPolicy
 from energy_net.market.iso.cost_types import CostType, calculate_costs
 from energy_net.market.iso.demand_patterns import calculate_demand
 from energy_net.market.iso.quadratic_pricing_iso import QuadraticPricingISO
