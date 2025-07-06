@@ -116,6 +116,27 @@ class PCSSimulator:
                 self.logger.error(f"Failed to set trained agent {agent_idx} from {model_path}: {e}")
             print(f"Error loading model: {str(e)}")
             return False
+        
+    def set_pre_trained_agent(self, agent_idx, model):
+        try:
+            dummy_obs = np.zeros(4, dtype=np.float32)  # Match PCS observation size
+            test_result = model.predict(dummy_obs, deterministic=True)
+            print(f"Test prediction successful: {test_result}")
+            success = self.pcs_manager.set_pre_trained_agent(agent_idx, model)
+            
+            # For compatibility with older code, store a direct reference
+            # to the first trained agent
+            if success and agent_idx == 0:
+                self.trained_pcs_agent = model
+                print(f"Agent {agent_idx} fully initialized")
+            
+            if self.logger:
+                self.logger.info(f"Successfully set pre-trained agent {agent_idx}")
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Failed to set pre-rained agent {agent_idx}, likely doesn't implement 'predict' : {e}")
+            print(f"Error loading model: {str(e)}")
+            return False
     
     def translate_to_pcs_observation(self, current_time: float, pcs_idx: int = 0) -> np.ndarray:
         """

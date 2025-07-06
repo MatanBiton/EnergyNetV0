@@ -598,6 +598,10 @@ class ISOController:
         """
         success = self.pcs_simulator.set_trained_agent(agent_idx, pcs_agent_path)
         return success
+    
+    def set_pretrained_pcs_agent(self, agent_idx, pcs_agent):
+        success = self.pcs_simulator.set_pre_trained_agent(agent_idx, pcs_agent)
+        return success
 
     def simulate_pcs_response(self, observation: np.ndarray) -> float:
         """

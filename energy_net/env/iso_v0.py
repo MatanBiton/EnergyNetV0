@@ -68,6 +68,7 @@ class ISOEnv(gym.Env):
         pcs_unit_config_path: Optional[str] = 'configs/pcs_unit_config.yaml',
         log_file: Optional[str] = 'logs/environments.log',
         reward_type: str = 'iso',
+        trained_pcs_model: Optional[object] = None,
         trained_pcs_model_path: Optional[str] = None,  
         model_iteration: Optional[int] = None,
         demand_pattern=None,
@@ -127,10 +128,7 @@ class ISOEnv(gym.Env):
                     raise FileNotFoundError(f"Model file not found: {trained_pcs_model_path}")
                     
                 # Try loading the model first to verify it's valid
-                test_model = PPO.load(trained_pcs_model_path, env=self, custom_objects={
-                    "observation_space": self.observation_space,
-+                   "action_space":    self.action_space,
-                })
+                test_model = PPO.load(trained_pcs_model_path)
                 print("Successfully loaded model, now setting for each agent")
                 
                 for i in range(num_pcs_agents):
@@ -142,6 +140,15 @@ class ISOEnv(gym.Env):
                 self.logger.error(f"Failed to load PCS model: {e}")
                 print(f"Error loading model: {str(e)}")
                 raise  # Re-raise the exception to see the full traceback
+        elif trained_pcs_model:
+            try:
+                for i in range(num_pcs_agents):
+                    success = self.controller.set_pretrained_pcs_agent(i, trained_pcs_model)
+                    print(f"Agent {i} loading status: {'Success' if success else 'Failed'}")
+            except Exception as e:
+                self.logger.error(f"Failed to load pre-trained PCS model: {e} ")
+                print(f"Error loading pre-trained PCS model")
+                raise
 
         self.model_iteration = model_iteration
         self.observation_space = self.controller.observation_space

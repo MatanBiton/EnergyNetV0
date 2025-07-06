@@ -70,6 +70,33 @@ class PCSManager:
             logging.error(f"Failed to load agent {agent_idx}: {e}")
             print(f"Error in set_trained_agent: {str(e)}")
             return False
+        
+    def set_pre_trained_agent(self, agent_idx, model):
+        """Set trained agent for specific PCS unit"""
+        try:
+            # print(f"Loading model for agent {agent_idx} from {model_path}")
+            # if not os.path.exists(model_path):
+            #     raise FileNotFoundError(f"Model file not found: {model_path}")
+                
+            trained_agent = model
+            print(f"Model loaded successfully, testing prediction...")
+            
+            # Test the model with a dummy observation
+            test_obs = np.zeros(4, dtype=np.float32)  # 4 is the observation space size
+            try:
+                test_action = trained_agent.predict(test_obs, deterministic=True)
+                print(f"Test prediction successful: {test_action}")
+            except Exception as e:
+                print(f"Test prediction failed: {e}")
+                return False
+            
+            self.trained_agents[agent_idx] = trained_agent
+            print(f"Agent {agent_idx} fully initialized")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to load agent {agent_idx}: {e}")
+            print(f"Error in set_trained_agent: {str(e)}")
+            return False
             
     def simulate_step(
         self, 
