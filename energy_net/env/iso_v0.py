@@ -127,7 +127,7 @@ class ISOEnv(gym.Env):
                     raise FileNotFoundError(f"Model file not found: {trained_pcs_model_path}")
                     
                 # Try loading the model first to verify it's valid
-                test_model = PPO.load(trained_pcs_model_path)
+                test_model = PPO.load(trained_pcs_model_path, env=self)
                 print("Successfully loaded model, now setting for each agent")
                 
                 for i in range(num_pcs_agents):
