@@ -78,12 +78,14 @@ class MarketInterface:
         if self.logger:
             self.logger.info("Market Interface initialized")
     
-    def set_trained_iso_agent(self, iso_agent: PPO) -> bool:
+    def set_trained_iso_agent(self, iso_agent) -> bool:
         """
         Set the trained ISO agent for price determination.
         
         Args:
-            iso_agent: Trained PPO agent for ISO price decisions
+            iso_agent: Trained agent for ISO price decisions. Can be either:
+                      - PPO agent from stable_baselines3
+                      - Any object with a predict method that takes (observation, deterministic) and returns prices
             
         Returns:
             Success status of setting the agent
@@ -97,10 +99,36 @@ class MarketInterface:
         test_obs = np.array([0.5, 100.0, 0.0], dtype=np.float32)  # time, predicted_demand, pcs_demand
         
         try:
-            prices = self.trained_iso_agent.predict(test_obs, deterministic=True)[0]
-            if self.logger:
-                self.logger.info(f"ISO agent test successful - got prices: {prices}")
-            return True
+            # Check if it's a PPO model or any other model with predict method
+            if hasattr(iso_agent, 'predict'):
+                if isinstance(iso_agent, PPO):
+                    # PPO model - use standard signature
+                    prices = iso_agent.predict(test_obs, deterministic=True)[0]
+                else:
+                    # Custom model - try both signatures to be flexible
+                    try:
+                        # Try signature with deterministic parameter
+                        prices = iso_agent.predict(test_obs, deterministic=True)
+                        # If it returns a tuple like PPO, extract the first element
+                        if isinstance(prices, tuple):
+                            prices = prices[0]
+                    except TypeError:
+                        # Try signature without deterministic parameter
+                        prices = iso_agent.predict(test_obs)
+                        # If it returns a tuple, extract the first element
+                        if isinstance(prices, tuple):
+                            prices = prices[0]
+                
+                # Validate that we got reasonable prices
+                if isinstance(prices, (list, tuple, np.ndarray)) and len(prices) >= 2:
+                    if self.logger:
+                        self.logger.info(f"ISO agent test successful - got prices: {prices}")
+                    return True
+                else:
+                    raise ValueError(f"Invalid price format: expected array/list with at least 2 elements, got {type(prices)} with value {prices}")
+            else:
+                raise AttributeError(f"ISO agent {type(iso_agent)} does not have a predict method")
+                
         except Exception as e:
             if self.logger:
                 self.logger.error(f"ISO agent validation failed: {e}")
@@ -132,7 +160,25 @@ class MarketInterface:
         # Determine prices using trained agent or default pricing model
         if self.trained_iso_agent is not None:
             try:
-                prices = self.trained_iso_agent.predict(iso_observation, deterministic=True)[0]
+                # Handle different types of models
+                if isinstance(self.trained_iso_agent, PPO):
+                    # PPO model - use standard signature
+                    prices = self.trained_iso_agent.predict(iso_observation, deterministic=True)[0]
+                else:
+                    # Custom model - try both signatures to be flexible
+                    try:
+                        # Try signature with deterministic parameter
+                        prices = self.trained_iso_agent.predict(iso_observation, deterministic=True)
+                        # If it returns a tuple like PPO, extract the first element
+                        if isinstance(prices, tuple):
+                            prices = prices[0]
+                    except TypeError:
+                        # Try signature without deterministic parameter  
+                        prices = self.trained_iso_agent.predict(iso_observation)
+                        # If it returns a tuple, extract the first element
+                        if isinstance(prices, tuple):
+                            prices = prices[0]
+                
                 self.iso_sell_price, self.iso_buy_price = prices
                 
                 if self.iso_sell_price == 0 and self.iso_buy_price == 0:

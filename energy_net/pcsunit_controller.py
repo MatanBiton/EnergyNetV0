@@ -91,18 +91,23 @@ class PCSUnitController:
         pcs_unit_config_path: Optional[str] = 'configs/pcs_unit_config.yaml',
         log_file: Optional[str] = 'logs/environments.log',  
         reward_type: str = 'cost', 
-        trained_iso_model_path: Optional[str] = None  
+        trained_iso_model_path: Optional[str] = None,
+        trained_iso_model_instance: Optional[Any] = None
     ):
         """
         Constructs an instance of PCSunitEnv.
 
         Args:
+            cost_type: Cost type for demand calculation (string or CostType enum).
+            demand_pattern: Demand pattern for simulation (string or DemandPattern enum).
             render_mode: Optional rendering mode.
             env_config_path: Path to the environment YAML configuration file.
             iso_config_path: Path to the ISO YAML configuration file.
             pcs_unit_config_path: Path to the PCSUnit YAML configuration file.
             log_file: Path to the log file for environment logging.
             reward_type: Type of reward function to use.
+            trained_iso_model_path: Path to trained ISO model file.
+            trained_iso_model_instance: Instance of trained ISO model with predict method.
         """
         super().__init__()  # Initialize the parent class
 
@@ -230,8 +235,26 @@ class PCSUnitController:
                 self.logger.info(f"Loaded ISO model: {trained_iso_model_path}")
             except Exception as e:
                 self.logger.error(f"Failed to load ISO model: {e}")
+        elif trained_iso_model_instance:
+            try:
+                self.market_interface.set_trained_iso_agent(trained_iso_model_instance)
+                self.logger.info(f"Set ISO model instance: {type(trained_iso_model_instance).__name__}")
+            except Exception as e:
+                self.logger.error(f"Failed to set ISO model instance: {e}")
 
         self.logger.info("PCSunitEnv initialization complete.")
+                
+    def set_trained_iso_agent(self, iso_agent) -> bool:
+        """
+        Set the trained ISO agent for the market interface.
+        
+        Args:
+            iso_agent: Trained agent with predict method for ISO price decisions
+            
+        Returns:
+            Success status of setting the agent
+        """
+        return self.market_interface.set_trained_iso_agent(iso_agent)
                 
     def load_config(self, config_file) -> Dict[str, Any]:
         """

@@ -53,12 +53,15 @@ class PCSUnitEnv(gym.Env):
         log_file: Optional[str] = 'logs/environments.log',
         reward_type: str = 'cost',
         trained_iso_model_path: Optional[str] = None, 
+        trained_iso_model_instance: Optional[Any] = None,
         model_iteration: Optional[int] = None  
     ):
         """
         Initializes the PCSUnitEnv environment.
 
         Args:
+            cost_type: Cost type for demand calculation (string or CostType enum).
+            demand_pattern: Demand pattern for simulation (string or DemandPattern enum).
             render_mode (Optional[str], optional): Rendering mode. Defaults to None.
             env_config_path (Optional[str], optional): Path to environment config. Defaults to 'configs/environment_config.yaml'.
             iso_config_path (Optional[str], optional): Path to ISO config. Defaults to 'configs/iso_config.yaml'.
@@ -66,6 +69,7 @@ class PCSUnitEnv(gym.Env):
             log_file (Optional[str], optional): Path to log file. Defaults to 'logs/environments.log'.
             reward_type (str, optional): Type of reward function. Defaults to 'cost'.
             trained_iso_model_path (Optional[str], optional): Path to trained ISO model. Defaults to None.
+            trained_iso_model_instance (Optional[Any], optional): Instance of trained ISO model with predict method. Defaults to None.
             model_iteration (Optional[int], optional): Model iteration number. Defaults to None.
         """
         super().__init__()
@@ -92,7 +96,8 @@ class PCSUnitEnv(gym.Env):
             pcs_unit_config_path=pcs_unit_config_path,
             log_file=log_file,
             reward_type=reward_type,
-            trained_iso_model_path=trained_iso_model_path 
+            trained_iso_model_path=trained_iso_model_path,
+            trained_iso_model_instance=trained_iso_model_instance
         )
 
         # Store new parameters
@@ -110,6 +115,12 @@ class PCSUnitEnv(gym.Env):
                 self.logger.info(f"Loaded ISO model: {trained_iso_model_path}")
             except Exception as e:
                 self.logger.error(f"Failed to load ISO model: {e}")
+        elif trained_iso_model_instance:
+            try:
+                self.controller.set_trained_iso_agent(trained_iso_model_instance)
+                self.logger.info(f"Set ISO model instance: {type(trained_iso_model_instance).__name__}")
+            except Exception as e:
+                self.logger.error(f"Failed to set ISO model instance: {e}")
 
         self.model_iteration = model_iteration
         self.observation_space = self.controller.observation_space
@@ -124,6 +135,16 @@ class PCSUnitEnv(gym.Env):
             return True
         except Exception as e:
             self.logger.error(f"Failed to update ISO model: {e}")
+            return False
+
+    def update_trained_iso_model_instance(self, model_instance) -> bool:
+        """Update the trained ISO model instance during training iterations"""
+        try:
+            self.controller.set_trained_iso_agent(model_instance)
+            self.logger.info(f"Updated ISO model instance: {type(model_instance).__name__}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to update ISO model instance: {e}")
             return False
 
     def reset(
