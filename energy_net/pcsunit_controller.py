@@ -26,6 +26,7 @@ from stable_baselines3 import PPO
 from gymnasium import spaces
 import yaml
 import logging
+import pkg_resources
 
 from energy_net.components.pcsunit import PCSUnit
 from energy_net.dynamics.energy_dynamcis import EnergyDynamics
@@ -232,27 +233,42 @@ class PCSUnitController:
 
         self.logger.info("PCSunitEnv initialization complete.")
                 
-    def load_config(self, config_path: str) -> Dict[str, Any]:
+    def load_config(self, config_file) -> Dict[str, Any]:
         """
-        Loads a YAML configuration file.
-
+        Load configuration from YAML file.
+        
         Args:
-            config_path (str): Path to the YAML config file.
-
+            config_file: Path to the YAML configuration file
+            
         Returns:
-            Dict[str, Any]: Configuration parameters.
-
+            Dict containing configuration parameters
+            
         Raises:
-            FileNotFoundError: If the config file does not exist.
+            FileNotFoundError: If the configuration file is not found
         """
-        if not os.path.exists(config_path):
-            self.logger.error(f"Configuration file not found at {config_path}")
-            raise FileNotFoundError(f"Configuration file not found at {config_path}")
-        with open(config_path, 'r') as file:
-            config: Dict[str, Any] = yaml.safe_load(file)
-            self.logger.debug(f"Loaded configuration from {config_path}: {config}")
+        if config_file and os.path.exists(config_file):
+            self.logger.debug(f"Loading config from filesystem: {config_file}")
+            with open(config_file, "r") as f:
+                return yaml.safe_load(f)
 
-        return config        
+        # 2) Fall back to package data in energy_net/configs/
+        #    Normalize resource name:
+        #    - If user already passed "configs/…", keep it
+        #    - Else, prepend "configs/"
+        if config_file.startswith("configs/"):
+            resource_name = config_file
+        else:
+            resource_name = f"configs/{config_file}"
+
+        try:
+            raw = pkg_resources.resource_string("energy_net", resource_name)
+            cfg = yaml.safe_load(raw)
+            self.logger.debug(f"Loaded config from package resource: {resource_name}")
+            return cfg
+        except Exception as e:
+            msg = f"Configuration file not found (neither FS nor pkg resource): {config_file}"
+            self.logger.error(f"{msg} — {e}")
+            raise FileNotFoundError(msg)        
 
     def initialize_reward(self, reward_type: str) -> BaseReward:
         """
