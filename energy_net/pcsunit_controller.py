@@ -679,8 +679,8 @@ class PCSUnitController:
         
         # Simple but comprehensive debugging
         self.logger.debug(
-            f"Step {self.count}: Action {original_action:.4f}→{validated_battery_action:.4f}, "
-            f"Battery {previous_battery_level:.2f}→{self.battery_level:.2f}, "
+            f"Step {self.count}: Action {original_action:.4f}->{validated_battery_action:.4f}, "
+            f"Battery {previous_battery_level:.2f}->{self.battery_level:.2f}, "
             f"Net Exchange {net_exchange:.4f}, Reward {reward:.4f}"
         )
         
